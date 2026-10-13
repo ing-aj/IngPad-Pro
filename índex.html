@@ -1,0 +1,2009 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="IngePad Pro" />
+  <meta name="theme-color" content="#0f172a" />
+  <title>IngePad Pro — Editor de Texto e Ingeniería (iOS & Windows Style)</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%230f172a'/><text x='50' y='64' font-family='monospace' font-size='44' font-weight='bold' fill='%2338bdf8' text-anchor='middle'>(λ)</text></svg>" />
+  <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'><rect width='180' height='180' rx='40' fill='%230f172a'/><text x='90' y='115' font-family='monospace' font-size='78' font-weight='bold' fill='%2338bdf8' text-anchor='middle'>(λ)</text></svg>" />
+  <style>
+    :root {
+      --bg-primary: #0f172a;
+      --bg-secondary: #1e293b;
+      --bg-tertiary: #334155;
+      --bg-editor: #0b1120;
+      --text-primary: #f8fafc;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+      --accent: #38bdf8;
+      --accent-hover: #0284c7;
+      --accent-soft: rgba(56, 189, 248, 0.15);
+      --border: #334155;
+      --success: #22c55e;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --font-mono: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace;
+      --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      --editor-font-size: 14px;
+      --editor-line-height: 21px;
+    }
+
+    [data-theme="light"] {
+      --bg-primary: #f1f5f9;
+      --bg-secondary: #e2e8f0;
+      --bg-tertiary: #cbd5e1;
+      --bg-editor: #ffffff;
+      --text-primary: #0f172a;
+      --text-secondary: #475569;
+      --text-muted: #64748b;
+      --accent: #0284c7;
+      --accent-hover: #0369a1;
+      --accent-soft: rgba(2, 132, 199, 0.12);
+      --border: #cbd5e1;
+    }
+
+    [data-theme="classic-win"] {
+      --bg-primary: #d4d0c8;
+      --bg-secondary: #ece9d8;
+      --bg-tertiary: #c0c0c0;
+      --bg-editor: #ffffff;
+      --text-primary: #000000;
+      --text-secondary: #333333;
+      --text-muted: #555555;
+      --accent: #0054e3;
+      --accent-hover: #003399;
+      --accent-soft: rgba(0, 84, 227, 0.15);
+      --border: #808080;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
+      font-family: var(--font-sans);
+      font-size: 14px;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    .app-shell {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      height: 100dvh;
+      padding-top: env(safe-area-inset-top, 0px);
+      padding-bottom: env(safe-area-inset-bottom, 0px);
+      padding-left: env(safe-area-inset-left, 0px);
+      padding-right: env(safe-area-inset-right, 0px);
+    }
+
+    /* Windows-style Top Menu & Header */
+    .top-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--bg-primary);
+      border-bottom: 1px solid var(--border);
+      padding: 6px 10px;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 700;
+      font-size: 15px;
+      color: var(--text-primary);
+      white-space: nowrap;
+    }
+
+    .brand-badge {
+      background: var(--accent-soft);
+      color: var(--accent);
+      border: 1px solid var(--accent);
+      font-family: var(--font-mono);
+      font-size: 12px;
+      padding: 2px 6px;
+      border-radius: 6px;
+      font-weight: 700;
+    }
+
+    .win-menubar {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .win-menubar::-webkit-scrollbar { display: none; }
+
+    .menu-btn {
+      background: transparent;
+      color: var(--text-primary);
+      border: 1px solid transparent;
+      padding: 5px 9px;
+      border-radius: 5px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      white-space: nowrap;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .menu-btn:hover, .menu-btn.active {
+      background: var(--bg-secondary);
+      border-color: var(--border);
+    }
+
+    .menu-btn.primary-action {
+      background: var(--accent);
+      color: #0f172a;
+      font-weight: 600;
+    }
+    [data-theme="light"] .menu-btn.primary-action,
+    [data-theme="classic-win"] .menu-btn.primary-action {
+      color: #ffffff;
+    }
+
+    /* Toolbar Row (File name, Extension selector, Encoding, Quick actions) */
+    .file-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 10px;
+      background: var(--bg-secondary);
+      border-bottom: 1px solid var(--border);
+      overflow-x: auto;
+      flex-shrink: 0;
+      scrollbar-width: none;
+    }
+    .file-toolbar::-webkit-scrollbar { display: none; }
+
+    .filename-group {
+      display: flex;
+      align-items: center;
+      background: var(--bg-editor);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+
+    .filename-input {
+      background: transparent;
+      border: none;
+      color: var(--text-primary);
+      font-family: var(--font-mono);
+      font-size: 13px;
+      padding: 5px 8px;
+      width: 135px;
+      outline: none;
+    }
+
+    .ext-select {
+      background: var(--bg-tertiary);
+      color: var(--accent);
+      border: none;
+      border-left: 1px solid var(--border);
+      font-family: var(--font-mono);
+      font-weight: 700;
+      font-size: 12px;
+      padding: 5px 6px;
+      outline: none;
+      cursor: pointer;
+    }
+
+    .tool-chip {
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+      padding: 5px 8px;
+      border-radius: 6px;
+      font-size: 12px;
+      cursor: pointer;
+      white-space: nowrap;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+
+    .tool-chip:active, .tool-chip:hover {
+      border-color: var(--accent);
+      background: var(--accent-soft);
+    }
+
+    /* Tabs Bar */
+    .tabs-bar {
+      display: flex;
+      align-items: center;
+      background: var(--bg-primary);
+      border-bottom: 1px solid var(--border);
+      padding: 4px 8px 0 8px;
+      gap: 4px;
+      overflow-x: auto;
+      flex-shrink: 0;
+      scrollbar-width: none;
+    }
+    .tabs-bar::-webkit-scrollbar { display: none; }
+
+    .tab-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 10px;
+      background: var(--bg-secondary);
+      color: var(--text-secondary);
+      border: 1px solid var(--border);
+      border-bottom: none;
+      border-radius: 6px 6px 0 0;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      cursor: pointer;
+      white-space: nowrap;
+      max-width: 180px;
+    }
+
+    .tab-item.active {
+      background: var(--bg-editor);
+      color: var(--accent);
+      font-weight: 600;
+      border-top: 2px solid var(--accent);
+    }
+
+    .tab-close {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+    .tab-close:hover {
+      background: var(--danger);
+      color: #fff;
+    }
+
+    .tab-add {
+      background: transparent;
+      border: 1px dashed var(--border);
+      color: var(--text-secondary);
+      padding: 4px 9px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: bold;
+      margin-bottom: 3px;
+    }
+
+    /* Collapsible Search / Replace Drawer */
+    .search-bar {
+      display: none;
+      background: var(--bg-secondary);
+      border-bottom: 1px solid var(--border);
+      padding: 8px 10px;
+      gap: 6px;
+      flex-wrap: wrap;
+      align-items: center;
+      flex-shrink: 0;
+    }
+    .search-bar.open {
+      display: flex;
+    }
+    .search-input {
+      background: var(--bg-editor);
+      border: 1px solid var(--border);
+      color: var(--text-primary);
+      padding: 5px 8px;
+      border-radius: 5px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      flex: 1 1 120px;
+      min-width: 110px;
+    }
+
+    /* Main Editor Container */
+    .editor-workspace {
+      position: relative;
+      flex: 1;
+      display: flex;
+      overflow: hidden;
+      background: var(--bg-editor);
+    }
+
+    .gutter {
+      width: 46px;
+      padding: 12px 6px 12px 2px;
+      background: var(--bg-primary);
+      border-right: 1px solid var(--border);
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+      font-size: var(--editor-font-size);
+      line-height: var(--editor-line-height);
+      text-align: right;
+      overflow: hidden;
+      user-select: none;
+      flex-shrink: 0;
+    }
+
+    .editor-stage {
+      position: relative;
+      flex: 1;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    .highlight-layer, .code-textarea {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      padding: 12px 14px;
+      border: none;
+      font-family: var(--font-mono);
+      font-size: var(--editor-font-size);
+      line-height: var(--editor-line-height);
+      tab-size: 2;
+      -moz-tab-size: 2;
+      white-space: pre;
+      overflow: auto;
+      box-sizing: border-box;
+    }
+
+    .editor-stage.wrap-enabled .highlight-layer,
+    .editor-stage.wrap-enabled .code-textarea {
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+
+    .highlight-layer {
+      pointer-events: none;
+      color: var(--text-primary);
+      z-index: 1;
+    }
+
+    .code-textarea {
+      z-index: 2;
+      color: transparent;
+      background: transparent;
+      caret-color: var(--accent);
+      resize: none;
+      outline: none;
+      -webkit-user-select: text;
+      user-select: text;
+    }
+
+    .code-textarea::selection {
+      background: rgba(56, 189, 248, 0.3);
+      color: transparent;
+    }
+
+    /* Syntax Highlighting Colors */
+    .tok-comment { color: #64748b; font-style: italic; }
+    .tok-string { color: #a3e635; }
+    .tok-keyword { color: #38bdf8; font-weight: 600; }
+    .tok-builtin { color: #c084fc; }
+    .tok-number { color: #fb923c; }
+    .tok-paren { color: #facc15; font-weight: 700; }
+    .tok-gcode-g { color: #38bdf8; font-weight: 700; }
+    .tok-gcode-m { color: #f472b6; font-weight: 700; }
+    .tok-gcode-coord { color: #fbbf24; }
+
+    [data-theme="light"] .tok-comment,
+    [data-theme="classic-win"] .tok-comment { color: #008000; }
+    [data-theme="light"] .tok-string,
+    [data-theme="classic-win"] .tok-string { color: #a31515; }
+    [data-theme="light"] .tok-keyword,
+    [data-theme="classic-win"] .tok-keyword { color: #0000ff; }
+    [data-theme="light"] .tok-builtin,
+    [data-theme="classic-win"] .tok-builtin { color: #795e26; }
+    [data-theme="light"] .tok-number,
+    [data-theme="classic-win"] .tok-number { color: #098658; }
+    [data-theme="light"] .tok-paren,
+    [data-theme="classic-win"] .tok-paren { color: #b45309; }
+
+    /* iOS Quick Engineering Symbol Ribbon */
+    .ios-symbol-bar {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 6px 8px;
+      background: var(--bg-secondary);
+      border-top: 1px solid var(--border);
+      overflow-x: auto;
+      flex-shrink: 0;
+      scrollbar-width: none;
+    }
+    .ios-symbol-bar::-webkit-scrollbar { display: none; }
+
+    .sym-key {
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+      border-bottom: 2px solid var(--border);
+      border-radius: 6px;
+      padding: 6px 10px;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      flex-shrink: 0;
+      min-width: 34px;
+      text-align: center;
+    }
+
+    .sym-key:active {
+      transform: translateY(1px);
+      background: var(--accent);
+      color: #0f172a;
+    }
+
+    .sym-key.fn-key {
+      color: var(--accent);
+      font-size: 12px;
+    }
+
+    /* Windows-style Status Bar */
+    .status-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--bg-primary);
+      border-top: 1px solid var(--border);
+      padding: 4px 10px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--text-secondary);
+      gap: 10px;
+      overflow-x: auto;
+      flex-shrink: 0;
+      scrollbar-width: none;
+    }
+    .status-bar::-webkit-scrollbar { display: none; }
+
+    .status-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      white-space: nowrap;
+    }
+
+    .status-pill {
+      padding: 1px 6px;
+      border-radius: 4px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+    }
+
+    .status-pill.ok { color: var(--success); border-color: rgba(34, 197, 94, 0.4); }
+    .status-pill.warn { color: var(--warning); border-color: rgba(245, 158, 11, 0.4); }
+    .status-pill.err { color: var(--danger); border-color: rgba(239, 68, 68, 0.5); font-weight: 700; }
+
+    /* Modals & Drawers */
+    .modal-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.65);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+    .modal-backdrop.open {
+      display: flex;
+    }
+
+    .modal-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      width: 100%;
+      max-width: 600px;
+      max-height: 85vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      box-shadow: 0 20px 45px rgba(0, 0, 0, 0.5);
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      background: var(--bg-primary);
+      border-bottom: 1px solid var(--border);
+      font-weight: 700;
+      font-size: 15px;
+    }
+
+    .modal-body {
+      padding: 16px;
+      overflow-y: auto;
+      line-height: 1.5;
+      color: var(--text-primary);
+      user-select: text;
+      -webkit-user-select: text;
+    }
+
+    .grid-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(165px, 1fr));
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .tpl-card {
+      background: var(--bg-primary);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px;
+      cursor: pointer;
+      transition: border-color 0.15s;
+    }
+    .tpl-card:hover {
+      border-color: var(--accent);
+    }
+    .tpl-card h4 {
+      color: var(--accent);
+      font-family: var(--font-mono);
+      font-size: 13px;
+      margin-bottom: 4px;
+    }
+    .tpl-card p {
+      font-size: 11.5px;
+      color: var(--text-secondary);
+    }
+
+    .eng-section {
+      background: var(--bg-primary);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 12px;
+    }
+    .eng-section h4 {
+      margin-bottom: 8px;
+      color: var(--accent);
+      font-size: 13px;
+    }
+
+    .form-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+      margin-top: 8px;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 68px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #0284c7;
+      color: #fff;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 12.5px;
+      font-weight: 600;
+      z-index: 200;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.35);
+    }
+    .toast.show { opacity: 1; }
+
+    table.csv-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      margin-top: 8px;
+    }
+    table.csv-table th, table.csv-table td {
+      border: 1px solid var(--border);
+      padding: 5px 8px;
+      text-align: left;
+    }
+    table.csv-table th {
+      background: var(--bg-primary);
+      color: var(--accent);
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <!-- Top Bar: Windows-like Power Menu -->
+    <header class="top-header">
+      <div class="brand">
+        <span class="brand-badge">(λ)</span>
+        <span>IngePad Pro</span>
+      </div>
+      <nav class="win-menubar">
+        <button class="menu-btn" onclick="openModal('templatesModal')">📄 Plantillas</button>
+        <button class="menu-btn" onclick="triggerOpenFile()">📂 Abrir</button>
+        <button class="menu-btn primary-action" onclick="downloadCurrentFile()">💾 Guardar</button>
+        <button class="menu-btn" onclick="shareFileIOS()">📲 Compartir iOS</button>
+        <button class="menu-btn" onclick="toggleSearchBar()">🔍 Buscar</button>
+        <button class="menu-btn" onclick="openModal('engToolsModal')">⚙️ Ingeniería</button>
+        <button class="menu-btn" onclick="openModal('githubModal')">🐙 GitHub / iPhone</button>
+        <button class="menu-btn" onclick="cycleTheme()" title="Cambiar tema">🎨 Tema</button>
+      </nav>
+    </header>
+
+    <!-- File Properties & Format Toolbar -->
+    <div class="file-toolbar">
+      <div class="filename-group" title="Nombre y extensión del archivo">
+        <input type="text" id="fileNameInput" class="filename-input" value="rutina_autocad" oninput="updateActiveTabMeta()" placeholder="nombre_archivo" />
+        <select id="fileExtSelect" class="ext-select" onchange="handleExtChange()">
+          <option value=".lsp">.lsp (AutoLISP)</option>
+          <option value=".dcl">.dcl (AutoCAD Dialog)</option>
+          <option value=".scr">.scr (AutoCAD Script)</option>
+          <option value=".gcode">.gcode (CNC / 3D)</option>
+          <option value=".nc">.nc (CNC Sinumerik/Fanuc)</option>
+          <option value=".dxf">.dxf (ASCII DXF)</option>
+          <option value=".py">.py (Python Ing.)</option>
+          <option value=".m">.m (MATLAB / Octave)</option>
+          <option value=".csv">.csv (Puntos COGO / Datos)</option>
+          <option value=".ino">.ino (Arduino / ESP32)</option>
+          <option value=".scad">.scad (OpenSCAD 3D)</option>
+          <option value=".cir">.cir (SPICE Netlist)</option>
+          <option value=".inp">.inp (Abaqus / EPANET)</option>
+          <option value=".mac">.mac (ANSYS APDL)</option>
+          <option value=".json">.json (JSON Datos)</option>
+          <option value=".xml">.xml (XML / LandXML)</option>
+          <option value=".sql">.sql (SQL Base Datos)</option>
+          <option value=".sh">.sh (Bash Script)</option>
+          <option value=".bat">.bat (Windows Batch)</option>
+          <option value=".txt">.txt (Texto Plano)</option>
+          <option value="custom">Otra ext...</option>
+        </select>
+      </div>
+
+      <button class="tool-chip" id="lineEndingBtn" onclick="toggleLineEnding()" title="Salto de línea para compatibilidad con Windows/AutoCAD">
+        🪟 CRLF (Win)
+      </button>
+      <button class="tool-chip" onclick="checkLispBalance(true)" title="Verificar balance de paréntesis AutoLISP">
+        ( ) Verificar LISP
+      </button>
+      <button class="tool-chip" onclick="autoIndentCode()" title="Formatear sangría automática">
+        📐 Indentar
+      </button>
+      <button class="tool-chip" onclick="toggleWordWrap()" id="wrapBtn">
+        ↩️ Ajuste: NO
+      </button>
+      <button class="tool-chip" onclick="changeFontSize(1)">A+</button>
+      <button class="tool-chip" onclick="changeFontSize(-1)">A-</button>
+    </div>
+
+    <!-- Multi-Tab Bar -->
+    <div class="tabs-bar" id="tabsBar"></div>
+
+    <!-- Search & Replace Bar -->
+    <div class="search-bar" id="searchBar">
+      <input type="text" id="findInput" class="search-input" placeholder="Buscar texto o RegEx..." />
+      <input type="text" id="replaceInput" class="search-input" placeholder="Reemplazar con..." />
+      <label style="font-size:11px; display:flex; align-items:center; gap:3px; color:var(--text-secondary);">
+        <input type="checkbox" id="regexCheck" /> RegEx
+      </label>
+      <button class="tool-chip" onclick="findNext()">Siguiente</button>
+      <button class="tool-chip" onclick="replaceCurrent()">Reemplazar</button>
+      <button class="tool-chip" onclick="replaceAll()">Todos</button>
+      <button class="tool-chip" onclick="goToLinePrompt()">Ir a Línea</button>
+      <button class="tool-chip" onclick="toggleSearchBar()">✖</button>
+    </div>
+
+    <!-- Code Editor Workspace -->
+    <main class="editor-workspace">
+      <div class="gutter" id="lineGutter">1</div>
+      <div class="editor-stage" id="editorStage">
+        <pre class="highlight-layer" id="highlightLayer" aria-hidden="true"></pre>
+        <textarea
+          id="codeEditor"
+          class="code-textarea"
+          spellcheck="false"
+          autocapitalize="off"
+          autocomplete="off"
+          autocorrect="off"
+        ></textarea>
+      </div>
+    </main>
+
+    <!-- iPhone Quick Engineering Symbol Bar -->
+    <div class="ios-symbol-bar" aria-label="Barra rápida de símbolos para iPhone">
+      <button class="sym-key" onclick="insertPair('(', ')')">( )</button>
+      <button class="sym-key" onclick="insertSnippet('(')">(</button>
+      <button class="sym-key" onclick="insertSnippet(')')">)</button>
+      <button class="sym-key fn-key" onclick="insertSnippet('(defun c:')">defun</button>
+      <button class="sym-key fn-key" onclick="insertSnippet('(setq ')">setq</button>
+      <button class="sym-key" onclick="insertPair('\"', '\"')">" "</button>
+      <button class="sym-key" onclick="insertSnippet('; ')">;</button>
+      <button class="sym-key" onclick="insertSnippet('  ')">Tab</button>
+      <button class="sym-key" onclick="moveCursor(-1)">←</button>
+      <button class="sym-key" onclick="moveCursor(1)">→</button>
+      <button class="sym-key" onclick="insertSnippet('_')">_</button>
+      <button class="sym-key" onclick="insertSnippet('-')">-</button>
+      <button class="sym-key" onclick="insertSnippet('+')">+</button>
+      <button class="sym-key" onclick="insertSnippet('*')">*</button>
+      <button class="sym-key" onclick="insertSnippet('/')">/</button>
+      <button class="sym-key" onclick="insertSnippet('=')">=</button>
+      <button class="sym-key" onclick="insertPair('[', ']')">[ ]</button>
+      <button class="sym-key" onclick="insertPair('{', '}')">{ }</button>
+      <button class="sym-key" onclick="insertSnippet('\\')">\</button>
+      <button class="sym-key fn-key" onclick="insertSnippet('(command \"_')">cmd</button>
+      <button class="sym-key fn-key" onclick="insertSnippet('(princ)')">princ</button>
+    </div>
+
+    <!-- Windows-Style Status Bar -->
+    <footer class="status-bar">
+      <div class="status-group">
+        <span id="cursorStatus">Lín 1, Col 1</span>
+        <span id="charCountStatus">0 caract. | 1 líneas</span>
+        <span id="parenStatus" class="status-pill ok">( ) Paréntesis: OK</span>
+      </div>
+      <div class="status-group">
+        <span id="langStatus" class="status-pill">AutoLISP (.lsp)</span>
+        <span id="encodingStatus" class="status-pill">UTF-8 | CRLF</span>
+      </div>
+    </footer>
+  </div>
+
+  <!-- Hidden file input for opening local files on iPhone/Desktop -->
+  <input type="file" id="hiddenFileInput" style="display:none" onchange="handleFileUploaded(event)" />
+
+  <!-- Modal: Engineering Templates -->
+  <div class="modal-backdrop" id="templatesModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <span>📐 Plantillas de Ingeniería y Programación</span>
+        <button class="tool-chip" onclick="closeModal('templatesModal')">✖ Cerrar</button>
+      </div>
+      <div class="modal-body">
+        <p style="color:var(--text-secondary); font-size:12.5px;">
+          Selecciona una plantilla para abrirla en una pestaña nueva lista para editar o exportar en tu iPhone:
+        </p>
+        <div class="grid-cards">
+          <div class="tpl-card" onclick="createFromTemplate('lsp_layer')">
+            <h4>.lsp — AutoLISP Capas y Polilínea</h4>
+            <p>Comando C:EJEMPLO con manejo de errores, captura de puntos, creación de capa y dibujo en AutoCAD.</p>
+          </div>
+          <div class="tpl-card" onclick="createFromTemplate('lsp_coords')">
+            <h4>.lsp — Exportar Coordenadas a CSV</h4>
+            <p>Rutina AutoLISP que selecciona vértices de polilíneas (LWPOLYLINE) y los guarda en un archivo CSV.</p>
+          </div>
+          <div class="tpl-card" onclick="createFromTemplate('scr_autocad')">
+            <h4>.scr — Script de AutoCAD por Lotes</h4>
+            <p>Script automático para configurar unidades, crear capas e insertar polilíneas por coordenadas X,Y,Z.</p>
+          </div>
+          <div class="tpl-card" onclick="createFromTemplate('gcode_cnc')">
+            <h4>.gcode — Fresado CNC 3 Ejes</h4>
+            <p>Programa G-Code estándar (G21, G90, G54, M03, compensación y ciclo de fresado de contorno).</p>
+          </div>
+          <div class="tpl-card" onclick="createFromTemplate('csv_cogo')">
+            <h4>.csv — Puntos Topográficos COGO</h4>
+            <p>Formato P,N,E,Z,D (Punto, Norte, Este, Elevación, Descripción) para Civil 3D / Topografía.</p>
+          </div>
+          <div class="tpl-card" onclick="createFromTemplate('py_eng')">
+            <h4>.py — Cálculo Estructural / Hidráulico</h4>
+            <p>Script en Python con cálculo de deflexión de viga e iteración de Manning para canales abiertos.</p>
+          </div>
+          <div class="tpl-card" onclick="createFromTemplate('matlab_ode')">
+            <h4>.m — Script MATLAB / Octave</h4>
+            <p>Análisis matricial de rigidez y respuesta dinámica de un sistema masa-resorte-amortiguador.</p>
+          </div>
+          <div class="tpl-card" onclick="createFromTemplate('dxf_ascii')">
+            <h4>.dxf — Archivo DXF ASCII Mínimo</h4>
+            <p>Estructura pura de código DXF con sección ENTITIES para generar geometría CAD desde texto.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Engineering Power Tools -->
+  <div class="modal-backdrop" id="engToolsModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <span>⚙️ Herramientas de Ingeniería y Código</span>
+        <button class="tool-chip" onclick="closeModal('engToolsModal')">✖ Cerrar</button>
+      </div>
+      <div class="modal-body">
+        <!-- LISP Analyzer -->
+        <div class="eng-section">
+          <h4>1. Auditor de Paréntesis y Sintaxis AutoLISP (.lsp)</h4>
+          <p style="font-size:12px; color:var(--text-secondary);">
+            Analiza el archivo actual ignorando comentarios (<code>;</code>) y cadenas de texto (<code>"..."</code>) para detectar paréntesis sin cerrar.
+          </p>
+          <div class="form-row">
+            <button class="tool-chip" onclick="checkLispBalance(true)">🔍 Ejecutar Auditoría LISP</button>
+            <button class="tool-chip" onclick="autoIndentCode(); closeModal('engToolsModal')">📐 Auto-Indentar Código</button>
+          </div>
+          <div id="lispAuditOutput" style="margin-top:8px; font-family:var(--font-mono); font-size:12px;"></div>
+        </div>
+
+        <!-- CSV to AutoCAD SCR Generator -->
+        <div class="eng-section">
+          <h4>2. Convertidor de Coordenadas (CSV → Script AutoCAD .scr)</h4>
+          <p style="font-size:12px; color:var(--text-secondary);">
+            Convierte las líneas <code>X,Y,Z</code> o <code>P,N,E,Z,D</code> del archivo actual en un script <code>.scr</code> de AutoCAD con comandos <code>_3DPOLY</code> o <code>_POINT</code>.
+          </p>
+          <div class="form-row">
+            <button class="tool-chip" onclick="convertCsvToScr('3DPOLY')">Generar .SCR (_3DPOLY)</button>
+            <button class="tool-chip" onclick="convertCsvToScr('POINT')">Generar .SCR (_POINT)</button>
+            <button class="tool-chip" onclick="previewCsvTable()">📊 Vista Tabla CSV</button>
+          </div>
+          <div id="csvPreviewContainer" style="max-height:180px; overflow:auto;"></div>
+        </div>
+
+        <!-- CNC G-Code Line Numbering -->
+        <div class="eng-section">
+          <h4>3. Numerador de Bloques CNC G-Code (N10, N20...)</h4>
+          <p style="font-size:12px; color:var(--text-secondary);">
+            Agrega o limpia numeración secuencial de líneas para controles Fanuc, Haas y Siemens.
+          </p>
+          <div class="form-row">
+            <button class="tool-chip" onclick="numberGCodeLines(10, 10); closeModal('engToolsModal')">Numerar N10, N20...</button>
+            <button class="tool-chip" onclick="numberGCodeLines(100, 5); closeModal('engToolsModal')">Numerar N100, N105...</button>
+            <button class="tool-chip" onclick="stripGCodeNumbers(); closeModal('engToolsModal')">Quitar Números N</button>
+          </div>
+        </div>
+
+        <!-- Quick Unit Converter -->
+        <div class="eng-section">
+          <h4>4. Conversor Rápido de Unidades de Ingeniería</h4>
+          <div class="form-row">
+            <input type="number" id="unitVal" class="search-input" value="1" oninput="runUnitConversion()" style="max-width:110px;" />
+            <select id="unitType" class="ext-select" onchange="runUnitConversion()" style="border-radius:6px; padding:6px;">
+              <option value="mm_in">Milímetros (mm) ↔ Pulgadas (in)</option>
+              <option value="m_ft">Metros (m) ↔ Pies (ft)</option>
+              <option value="mpa_psi">Megapascales (MPa) ↔ PSI</option>
+              <option value="kw_hp">Kilowatts (kW) ↔ Caballos (HP)</option>
+              <option value="deg_rad">Grados (°) ↔ Radianes (rad)</option>
+            </select>
+            <button class="tool-chip" onclick="insertConvertedValue()">Insertar en Editor</button>
+          </div>
+          <div id="unitResult" style="margin-top:8px; font-family:var(--font-mono); font-size:12.5px; color:var(--accent);"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: GitHub Pages & iPhone Setup -->
+  <div class="modal-backdrop" id="githubModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <span>🐙 Cómo alojar en GitHub y usar como App en iPhone</span>
+        <button class="tool-chip" onclick="closeModal('githubModal')">✖ Cerrar</button>
+      </div>
+      <div class="modal-body">
+        <div class="eng-section">
+          <h4>Paso 1: Subir a GitHub Pages (100% Gratis)</h4>
+          <ol style="padding-left:18px; font-size:12.5px; color:var(--text-secondary);">
+            <li>Crea un repositorio nuevo en <strong>github.com</strong> (por ejemplo: <code>ingepad-pro</code>).</li>
+            <li>Sube este archivo con el nombre exacto <code>index.html</code>.</li>
+            <li>En tu repositorio, entra a <strong>Settings → Pages</strong> y en <em>Branch</em> elige <strong>main</strong> y guarda.</li>
+            <li>En 1 minuto tu app estará disponible en <code>https://tu-usuario.github.io/ingepad-pro/</code>.</li>
+          </ol>
+          <div class="form-row">
+            <button class="tool-chip" onclick="downloadReadmeForGitHub()">📘 Descargar README.md para tu Repo</button>
+          </div>
+        </div>
+
+        <div class="eng-section">
+          <h4>Paso 2: Instalar en la Pantalla de Inicio del iPhone</h4>
+          <ol style="padding-left:18px; font-size:12.5px; color:var(--text-secondary);">
+            <li>Abre tu enlace de GitHub Pages en <strong>Safari</strong> desde tu iPhone.</li>
+            <li>Toca el botón <strong>Compartir</strong> (el cuadro con la flecha hacia arriba en la barra inferior).</li>
+            <li>Selecciona <strong>"Agregar a pantalla de inicio"</strong>.</li>
+            <li>¡Listo! Se abrirá a pantalla completa como una aplicación nativa sin barras de Safari y funcionará incluso sin conexión a internet.</li>
+          </ol>
+        </div>
+
+        <div class="eng-section">
+          <h4>Paso 3: Guardar archivos .LSP en la app Archivos de iOS</h4>
+          <p style="font-size:12.5px; color:var(--text-secondary);">
+            En tu iPhone puedes tocar <strong>"📲 Compartir iOS"</strong> → <strong>"Guardar en Archivos"</strong> o <strong>"💾 Guardar"</strong> para almacenar tus rutinas <code>.lsp</code>, <code>.scr</code>, <code>.gcode</code> o <code>.py</code> directamente en iCloud Drive, En mi iPhone, o enviarlas por AirDrop/Correo a tu PC con Windows.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toastMsg">Archivo guardado</div>
+
+  <script>
+    // --- Starter Templates for Engineering ---
+    const TEMPLATES = {
+      lsp_layer: {
+        name: "rutina_autocad",
+        ext: ".lsp",
+        content: `; ==========================================================================
+; ARCHIVO: rutina_autocad.lsp
+; DESCRIPCION: Crea capa de ingenieria y dibuja polilinea cerrada con area
+; COMPATIBILIDAD: AutoCAD / BricsCAD / ZWCAD (Windows & Mac)
+; ==========================================================================
+
+(defun c:INGEPOLY ( / *error* old_osmode old_cmdecho p1 p2 ancho alto area_m2)
+  ;; Manejo seguro de errores en AutoLISP
+  (defun *error* (msg)
+    (if old_osmode (setvar "OSMODE" old_osmode))
+    (if old_cmdecho (setvar "CMDECHO" old_cmdecho))
+    (if (not (member msg '("Function cancelled" "quit / exit abort")))
+      (princ (strcat "\\n[Error]: " msg))
+    )
+    (princ)
+  )
+
+  ;; Guardar variables de sistema
+  (setq old_osmode (getvar "OSMODE"))
+  (setq old_cmdecho (getvar "CMDECHO"))
+  (setvar "CMDECHO" 0)
+
+  ;; Solicitar datos al ingeniero en pantalla
+  (setq p1 (getpoint "\\nSeleccione esquina inferior izquierda: "))
+  (setq ancho (getdist p1 "\\nIngrese el ancho (m): "))
+  (setq alto (getdist p1 "\\nIngrese la altura (m): "))
+
+  (if (and p1 ancho alto)
+    (progn
+      ;; Crear capa si no existe
+      (command "_.-LAYER" "_Make" "ING-ESTRUCTURA" "_Color" "4" "" "")
+      (setvar "OSMODE" 0)
+
+      ;; Calcular puntos y dibujar polilinea
+      (setq p2 (list (+ (car p1) ancho) (+ (cadr p1) alto) (caddr p1)))
+      (command "_.RECTANG" p1 p2)
+
+      ;; Calcular area y mostrar reporte en linea de comandos
+      (setq area_m2 (* ancho alto))
+      (princ (strcat "\\n>>> Poligono creado en capa ING-ESTRUCTURA. Area = " (rtos area_m2 2 3) " m2"))
+    )
+  )
+
+  ;; Restaurar entorno
+  (setvar "OSMODE" old_osmode)
+  (setvar "CMDECHO" old_cmdecho)
+  (princ)
+)
+
+(princ "\\nRutina cargada. Escriba INGEPOLY para ejecutar.")
+(princ)
+`
+      },
+      lsp_coords: {
+        name: "exportar_vertices",
+        ext: ".lsp",
+        content: `; ==========================================================================
+; ARCHIVO: exportar_vertices.lsp
+; DESCRIPCION: Extrae coordenadas X,Y de una LWPOLYLINE a un archivo CSV
+; ==========================================================================
+
+(defun c:EXPCSV ( / ent edata ruta arch cont pt)
+  (vl-load-com)
+  (setq ent (car (entsel "\\nSeleccione la polilinea a exportar: ")))
+  (if ent
+    (progn
+      (setq edata (entget ent))
+      (if (= (cdr (assoc 0 edata)) "LWPOLYLINE")
+        (progn
+          (setq ruta (getfiled "Guardar coordenadas CSV" "vertices.csv" "csv" 1))
+          (if ruta
+            (progn
+              (setq arch (open ruta "w"))
+              (write-line "PUNTO,ESTE_X,NORTE_Y" arch)
+              (setq cont 1)
+              (foreach item edata
+                (if (= (car item) 10)
+                  (progn
+                    (setq pt (cdr item))
+                    (write-line
+                      (strcat (itoa cont) "," (rtos (car pt) 2 4) "," (rtos (cadr pt) 2 4))
+                      arch
+                    )
+                    (setq cont (1+ cont))
+                  )
+                )
+              )
+              (close arch)
+              (princ (strcat "\\nSe exportaron " (itoa (1- cont)) " vertices a: " ruta))
+            )
+          )
+        )
+        (princ "\\nEl objeto seleccionado no es una LWPOLYLINE.")
+      )
+    )
+  )
+  (princ)
+)
+`
+      },
+      scr_autocad: {
+        name: "lote_topografia",
+        ext: ".scr",
+        content: `; Script de AutoCAD (.scr) - Ejecutar con comando SCRIPT
+_.-LAYER _Make TOPO-POLIGONAL _Color 30  
+_.-UNITS 2 4 1 2 0 _N
+_.3DPOLY
+100.0000,200.0000,1540.25
+145.5000,210.2500,1541.10
+160.7500,175.8000,1539.80
+112.3000,165.0000,1540.00
+_Close
+_.ZOOM _Extents
+`
+      },
+      gcode_cnc: {
+        name: "pieza_fresado",
+        ext: ".gcode",
+        content: `%
+O1001 (FRESADO DE CONTORNO Y CAJERA - ALUMINIO 6061)
+N10 G21 G17 G90 G40 G49 G80
+N20 G54 (ORIGEN DE PIEZA)
+N30 T01 M06 (FRESA FRONTAL 10MM 3 FILOS)
+N40 S4500 M03
+N50 G00 X0.000 Y0.000
+N60 G43 H01 Z25.000 M08
+N70 G00 Z2.000
+N80 G01 Z-3.500 F180.0
+N90 G01 X80.000 Y0.000 F450.0
+N100 G01 X80.000 Y50.000
+N110 G01 X0.000 Y50.000
+N120 G01 X0.000 Y0.000
+N130 G00 Z25.000 M09
+N140 M05
+N150 G28 G91 Z0.0
+N160 M30
+%
+`
+      },
+      csv_cogo: {
+        name: "levantamiento_cogo",
+        ext: ".csv",
+        content: `PUNTO,NORTE,ESTE,ELEVACION,DESCRIPCION
+1,2176540.125,274510.450,1920.34,BN-01 MOJONERA
+2,2176555.890,274532.110,1921.05,EJE-VIA
+3,2176570.400,274558.920,1921.88,EJE-VIA
+4,2176582.115,274580.005,1922.15,ALCANTARILLA
+5,2176545.600,274595.300,1919.90,LINDERO-SUR
+`
+      },
+      py_eng: {
+        name: "calculo_ingenieria",
+        ext: ".py",
+        content: `# -*- coding: utf-8 -*-
+'''
+Cálculo de Deflexión en Viga Simplemente Apoyada y Tirante Normal (Manning)
+'''
+import math
+
+def deflexion_viga_uniforme(q_kn_m: float, L_m: float, E_gpa: float, I_cm4: float) -> float:
+    '''Retorna la deflexión máxima al centro en milímetros (mm).'''
+    q = q_kn_m * 1000.0          # N/m
+    E = E_gpa * 1e9              # Pa (N/m^2)
+    I = I_cm4 * 1e-8             # m^4
+    delta_m = (5.0 * q * (L_m ** 4)) / (384.0 * E * I)
+    return delta_m * 1000.0
+
+def caudal_manning(b_m: float, y_m: float, z: float, n: float, S: float) -> dict:
+    '''Calcula área hidráulica, radio hidráulico y gasto Q (m3/s) en canal trapecial.'''
+    area = (b_m + z * y_m) * y_m
+    perimetro = b_m + 2.0 * y_m * math.sqrt(1.0 + z ** 2)
+    radio_h = area / perimetro
+    velocidad = (1.0 / n) * (radio_h ** (2.0 / 3.0)) * math.sqrt(S)
+    return {"Q_m3s": area * velocidad, "V_ms": velocidad, "Rh_m": radio_h}
+
+if __name__ == "__main__":
+    d_max = deflexion_viga_uniforme(q_kn_m=18.5, L_m=6.0, E_gpa=200.0, I_cm4=12500.0)
+    hid = caudal_manning(b_m=2.0, y_m=1.2, z=1.5, n=0.014, S=0.0015)
+    print(f"Deflexión máxima: {d_max:.2f} mm (L/360 = {6000/360:.2f} mm)")
+    print(f"Gasto Manning Q = {hid['Q_m3s']:.3f} m3/s | V = {hid['V_ms']:.2f} m/s")
+`
+      },
+      matlab_ode: {
+        name: "rigidez_estructural",
+        ext: ".m",
+        content: `% =========================================================================
+% Análisis Matricial de Rigidez de Pórtico / Resorte Lineal (MATLAB/Octave)
+% =========================================================================
+clear; clc;
+
+k1 = 120e3; % Rigidez elemento 1 (N/m)
+k2 = 95e3;  % Rigidez elemento 2 (N/m)
+k3 = 80e3;  % Rigidez elemento 3 (N/m)
+
+% Matriz global de rigidez K (3 GDL)
+K = [ k1+k2,   -k2,     0;
+       -k2,  k2+k3,   -k3;
+         0,    -k3,    k3 ];
+
+% Vector de fuerzas nodales F (N)
+F = [ 0; 15000; 25000 ];
+
+% Desplazamientos nodales U (m)
+U = K \\ F;
+
+fprintf('Desplazamiento Nodo 1: %.4f mm\\n', U(1)*1000);
+fprintf('Desplazamiento Nodo 2: %.4f mm\\n', U(2)*1000);
+fprintf('Desplazamiento Nodo 3: %.4f mm\\n', U(3)*1000);
+`
+      },
+      dxf_ascii: {
+        name: "entidad_linea",
+        ext: ".dxf",
+        content: `0
+SECTION
+2
+ENTITIES
+0
+LINE
+8
+ING-EJE
+10
+0.0
+20
+0.0
+30
+0.0
+11
+150.0
+21
+75.0
+31
+0.0
+0
+ENDSEC
+0
+EOF
+`
+      }
+    };
+
+    // --- State Management ---
+    const STORAGE_KEY = "ingepad_pro_workspace_v1";
+    let state = {
+      tabs: [],
+      activeTabId: null,
+      lineEnding: "CRLF", // "CRLF" (Windows default for AutoCAD/CNC) or "LF"
+      wordWrap: false,
+      fontSize: 14,
+      theme: "dark"
+    };
+
+    const editorEl = document.getElementById("codeEditor");
+    const highlightEl = document.getElementById("highlightLayer");
+    const gutterEl = document.getElementById("lineGutter");
+    const fileNameInput = document.getElementById("fileNameInput");
+    const fileExtSelect = document.getElementById("fileExtSelect");
+    const tabsBar = document.getElementById("tabsBar");
+
+    function initApp() {
+      try {
+        const saved = window.localStorage ? localStorage.getItem(STORAGE_KEY) : null;
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (parsed && Array.isArray(parsed.tabs) && parsed.tabs.length > 0) {
+            state = { ...state, ...parsed };
+          }
+        }
+      } catch (e) {
+        console.warn("Almacenamiento local restringido o sin sesión previa:", e);
+      }
+
+      if (state.tabs.length === 0) {
+        const t1 = {
+          id: "tab_" + Date.now(),
+          name: TEMPLATES.lsp_layer.name,
+          ext: TEMPLATES.lsp_layer.ext,
+          content: TEMPLATES.lsp_layer.content
+        };
+        const t2 = {
+          id: "tab_" + (Date.now() + 1),
+          name: TEMPLATES.gcode_cnc.name,
+          ext: TEMPLATES.gcode_cnc.ext,
+          content: TEMPLATES.gcode_cnc.content
+        };
+        state.tabs = [t1, t2];
+        state.activeTabId = t1.id;
+      }
+
+      applyTheme(state.theme);
+      applyFontSize(state.fontSize);
+      renderTabs();
+      loadActiveTabIntoEditor();
+      runUnitConversion();
+
+      editorEl.addEventListener("input", () => {
+        const tab = getActiveTab();
+        if (tab) {
+          tab.content = editorEl.value;
+          saveState();
+        }
+        updateEditorView();
+      });
+
+      editorEl.addEventListener("scroll", () => {
+        highlightEl.scrollTop = editorEl.scrollTop;
+        highlightEl.scrollLeft = editorEl.scrollLeft;
+        gutterEl.scrollTop = editorEl.scrollTop;
+      });
+
+      editorEl.addEventListener("click", updateCursorStatus);
+      editorEl.addEventListener("keyup", updateCursorStatus);
+
+      editorEl.addEventListener("keydown", (e) => {
+        if (e.key === "Tab") {
+          e.preventDefault();
+          insertSnippet("  ");
+        } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s") {
+          e.preventDefault();
+          downloadCurrentFile();
+        } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "f") {
+          e.preventDefault();
+          toggleSearchBar();
+        }
+      });
+    }
+
+    function saveState() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      } catch (e) {}
+    }
+
+    function getActiveTab() {
+      return state.tabs.find(t => t.id === state.activeTabId) || state.tabs[0];
+    }
+
+    function renderTabs() {
+      tabsBar.innerHTML = "";
+      state.tabs.forEach(tab => {
+        const btn = document.createElement("div");
+        btn.className = "tab-item" + (tab.id === state.activeTabId ? " active" : "");
+        btn.onclick = () => switchTab(tab.id);
+
+        const label = document.createElement("span");
+        label.textContent = tab.name + tab.ext;
+        btn.appendChild(label);
+
+        if (state.tabs.length > 1) {
+          const closeBtn = document.createElement("span");
+          closeBtn.className = "tab-close";
+          closeBtn.textContent = "×";
+          closeBtn.onclick = (ev) => {
+            ev.stopPropagation();
+            closeTab(tab.id);
+          };
+          btn.appendChild(closeBtn);
+        }
+        tabsBar.appendChild(btn);
+      });
+
+      const addBtn = document.createElement("button");
+      addBtn.className = "tab-add";
+      addBtn.textContent = "+";
+      addBtn.title = "Nuevo archivo";
+      addBtn.onclick = () => createNewBlankTab();
+      tabsBar.appendChild(addBtn);
+    }
+
+    function switchTab(tabId) {
+      state.activeTabId = tabId;
+      saveState();
+      renderTabs();
+      loadActiveTabIntoEditor();
+    }
+
+    function createNewBlankTab() {
+      const idx = state.tabs.length + 1;
+      const newTab = {
+        id: "tab_" + Date.now(),
+        name: "nuevo_" + idx,
+        ext: ".lsp",
+        content: "; Archivo AutoLISP (" + "nuevo_" + idx + ".lsp)\n(defun c:TEST ()\n  (princ \"\\nListo para ingenieria.\")\n  (princ)\n)\n"
+      };
+      state.tabs.push(newTab);
+      state.activeTabId = newTab.id;
+      saveState();
+      renderTabs();
+      loadActiveTabIntoEditor();
+      showToast("Nueva pestaña creada");
+    }
+
+    function closeTab(tabId) {
+      if (state.tabs.length <= 1) return;
+      const idx = state.tabs.findIndex(t => t.id === tabId);
+      state.tabs = state.tabs.filter(t => t.id !== tabId);
+      if (state.activeTabId === tabId) {
+        const nextTab = state.tabs[Math.max(0, idx - 1)];
+        state.activeTabId = nextTab.id;
+      }
+      saveState();
+      renderTabs();
+      loadActiveTabIntoEditor();
+    }
+
+    function loadActiveTabIntoEditor() {
+      const tab = getActiveTab();
+      if (!tab) return;
+      fileNameInput.value = tab.name;
+
+      // Check if extension exists in select
+      const options = Array.from(fileExtSelect.options).map(o => o.value);
+      if (!options.includes(tab.ext)) {
+        const opt = document.createElement("option");
+        opt.value = tab.ext;
+        opt.textContent = tab.ext + " (Personalizado)";
+        fileExtSelect.insertBefore(opt, fileExtSelect.lastElementChild);
+      }
+      fileExtSelect.value = tab.ext;
+
+      editorEl.value = tab.content;
+      updateEditorView();
+      updateCursorStatus();
+    }
+
+    function updateActiveTabMeta() {
+      const tab = getActiveTab();
+      if (!tab) return;
+      const cleanName = fileNameInput.value.replace(/[^a-zA-Z0-9_\-\.]/g, "_") || "archivo";
+      tab.name = cleanName;
+      saveState();
+      renderTabs();
+    }
+
+    function handleExtChange() {
+      const tab = getActiveTab();
+      if (!tab) return;
+      if (fileExtSelect.value === "custom") {
+        let custom = prompt("Escribe la extensión deseada (ej. .lsp, .inp, .geo, .mac, .stl):", ".inp");
+        if (custom) {
+          custom = custom.trim();
+          if (!custom.startsWith(".")) custom = "." + custom;
+          const opt = document.createElement("option");
+          opt.value = custom;
+          opt.textContent = custom + " (Personalizado)";
+          fileExtSelect.insertBefore(opt, fileExtSelect.lastElementChild);
+          fileExtSelect.value = custom;
+          tab.ext = custom;
+        } else {
+          fileExtSelect.value = tab.ext;
+        }
+      } else {
+        tab.ext = fileExtSelect.value;
+      }
+      saveState();
+      renderTabs();
+      updateEditorView();
+      showToast("Extensión cambiada a " + tab.ext);
+    }
+
+    // --- Syntax Highlighting & Gutter Sync ---
+    function escapeHtml(str) {
+      return str
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+    }
+
+    function highlightSyntax(code, ext) {
+      let escaped = escapeHtml(code);
+
+      if (ext === ".lsp" || ext === ".dcl" || ext === ".scr") {
+        // Tokenize strings and comments first using placeholders
+        const tokens = [];
+        const saveToken = (html) => {
+          tokens.push(html);
+          return `___TOK${tokens.length - 1}___`;
+        };
+
+        escaped = escaped.replace(/"(?:\\.|[^"\\])*"/g, m => saveToken(`<span class="tok-string">${m}</span>`));
+        escaped = escaped.replace(/;.*$/gm, m => saveToken(`<span class="tok-comment">${m}</span>`));
+
+        escaped = escaped.replace(/\b(defun|setq|progn|if|cond|while|repeat|foreach|lambda|and|or|not|vl-load-com)\b/gi, `<span class="tok-keyword">$1</span>`);
+        escaped = escaped.replace(/\b(command|getpoint|getdist|getreal|getint|getstring|getfiled|entsel|entget|entmod|ssget|sslength|ssname|car|cdr|cadr|caddr|cons|list|append|assoc|subst|rtos|itoa|atof|strcat|princ|prin1|print|terpri|setvar|getvar|polar|distance|angle|open|close|read-line|write-line)\b/gi, `<span class="tok-builtin">$1</span>`);
+        escaped = escaped.replace(/\b(-?\d+(?:\.\d+)?)\b/g, `<span class="tok-number">$1</span>`);
+        escaped = escaped.replace(/([()[\]])/g, `<span class="tok-paren">$1</span>`);
+
+        escaped = escaped.replace(/___TOK(\d+)___/g, (_, idx) => tokens[Number(idx)]);
+        return escaped;
+      }
+
+      if (ext === ".gcode" || ext === ".nc") {
+        escaped = escaped.replace(/(\(.*?\)|;.*$)/gm, `<span class="tok-comment">$1</span>`);
+        escaped = escaped.replace(/\b(G\d+(?:\.\d+)?)\b/gi, `<span class="tok-gcode-g">$1</span>`);
+        escaped = escaped.replace(/\b(M\d+)\b/gi, `<span class="tok-gcode-m">$1</span>`);
+        escaped = escaped.replace(/\b([XYZIJKFRSTHN]-?\d+(?:\.\d+)?)\b/gi, `<span class="tok-gcode-coord">$1</span>`);
+        return escaped;
+      }
+
+      // Generic Engineering Code (Python, MATLAB, C/Arduino, OpenSCAD)
+      const tokens = [];
+      const saveToken = (html) => {
+        tokens.push(html);
+        return `___TOK${tokens.length - 1}___`;
+      };
+      escaped = escaped.replace(/(["'])(?:\\.|(?!\1)[^\\])*\1/g, m => saveToken(`<span class="tok-string">${m}</span>`));
+      escaped = escaped.replace(/(#|%|\/\/).*$/gm, m => saveToken(`<span class="tok-comment">${m}</span>`));
+      escaped = escaped.replace(/\b(def|class|return|import|from|if|elif|else|for|while|in|try|except|function|end|void|int|float|double|const|let|var|SELECT|FROM|WHERE|INSERT|UPDATE)\b/g, `<span class="tok-keyword">$1</span>`);
+      escaped = escaped.replace(/\b(-?\d+(?:\.\d+)?(?:e[+-]?\d+)?)\b/gi, `<span class="tok-number">$1</span>`);
+      escaped = escaped.replace(/___TOK(\d+)___/g, (_, idx) => tokens[Number(idx)]);
+      return escaped;
+    }
+
+    function updateEditorView() {
+      const tab = getActiveTab();
+      const text = editorEl.value;
+      const lines = text.split("\n");
+
+      // Line numbers
+      let gutterHtml = "";
+      for (let i = 1; i <= lines.length; i++) {
+        gutterHtml += i + "<br/>";
+      }
+      gutterEl.innerHTML = gutterHtml;
+
+      // Highlighted content (add trailing newline space so scroll matches)
+      highlightEl.innerHTML = highlightSyntax(text, tab ? tab.ext : ".txt") + "\n ";
+
+      // Character & Line stats
+      document.getElementById("charCountStatus").textContent = `${text.length} caract. | ${lines.length} lín.`;
+      document.getElementById("langStatus").textContent = `Formato: ${tab ? tab.ext.toUpperCase() : ".TXT"}`;
+      document.getElementById("encodingStatus").textContent = `UTF-8 | ${state.lineEnding}`;
+
+      checkLispBalance(false);
+    }
+
+    function updateCursorStatus() {
+      const pos = editorEl.selectionStart || 0;
+      const upToCursor = editorEl.value.slice(0, pos);
+      const lines = upToCursor.split("\n");
+      const ln = lines.length;
+      const col = lines[lines.length - 1].length + 1;
+      document.getElementById("cursorStatus").textContent = `Lín ${ln}, Col ${col}`;
+    }
+
+    // --- LISP Parenthesis Balance Checker ---
+    function checkLispBalance(showModalOrToast) {
+      const text = editorEl.value;
+      let depth = 0;
+      let inString = false;
+      let inComment = false;
+      let line = 1;
+      let col = 0;
+      let firstUnclosed = null;
+
+      for (let i = 0; i < text.length; i++) {
+        const ch = text[i];
+        const prev = i > 0 ? text[i - 1] : "";
+
+        if (ch === "\n") {
+          line++;
+          col = 0;
+          inComment = false;
+          continue;
+        }
+        col++;
+
+        if (inComment) continue;
+
+        if (ch === '"' && prev !== "\\") {
+          inString = !inString;
+          continue;
+        }
+        if (inString) continue;
+
+        if (ch === ";") {
+          inComment = true;
+          continue;
+        }
+
+        if (ch === "(") {
+          if (depth === 0) firstUnclosed = { line, col };
+          depth++;
+        } else if (ch === ")") {
+          depth--;
+          if (depth < 0) {
+            setParenBadge("err", `( ) Error: ')' extra en Lín ${line}, Col ${col}`);
+            if (showModalOrToast) {
+              const out = document.getElementById("lispAuditOutput");
+              if (out) out.innerHTML = `<span style="color:var(--danger)">❌ Paréntesis de cierre ')' sobrante en Línea ${line}, Columna ${col}.</span>`;
+              showToast(`Error LISP: ')' extra en Lín ${line}`);
+            }
+            return;
+          }
+        }
+      }
+
+      if (inString) {
+        setParenBadge("warn", `( ) Comillas " sin cerrar`);
+        if (showModalOrToast) showToast("Atención: Cadena de texto (\") sin cerrar");
+      } else if (depth === 0) {
+        setParenBadge("ok", `( ) Paréntesis: OK (0)`);
+        if (showModalOrToast) {
+          const out = document.getElementById("lispAuditOutput");
+          if (out) out.innerHTML = `<span style="color:var(--success)">✅ Sintaxis balanceada: Todos los paréntesis '(' y ')' están correctamente cerrados.</span>`;
+          showToast("✅ Paréntesis LISP 100% balanceados");
+        }
+      } else {
+        setParenBadge("err", `( ) Faltan ${depth} ')' (desde Lín ${firstUnclosed.line})`);
+        if (showModalOrToast) {
+          const out = document.getElementById("lispAuditOutput");
+          if (out) out.innerHTML = `<span style="color:var(--danger)">⚠️ Faltan ${depth} paréntesis de cierre ')'. Bloque abierto en Línea ${firstUnclosed.line}, Columna ${firstUnclosed.col}.</span>`;
+          showToast(`Faltan ${depth} paréntesis ')' por cerrar`);
+        }
+      }
+    }
+
+    function setParenBadge(type, msg) {
+      const el = document.getElementById("parenStatus");
+      el.className = "status-pill " + type;
+      el.textContent = msg;
+    }
+
+    // --- Quick iOS Insertion & Cursor Helpers ---
+    function insertSnippet(snippet) {
+      const start = editorEl.selectionStart;
+      const end = editorEl.selectionEnd;
+      const val = editorEl.value;
+      editorEl.value = val.substring(0, start) + snippet + val.substring(end);
+      editorEl.selectionStart = editorEl.selectionEnd = start + snippet.length;
+      editorEl.focus();
+      editorEl.dispatchEvent(new Event("input"));
+      updateCursorStatus();
+    }
+
+    function insertPair(openChar, closeChar) {
+      const start = editorEl.selectionStart;
+      const end = editorEl.selectionEnd;
+      const val = editorEl.value;
+      const selected = val.substring(start, end);
+      editorEl.value = val.substring(0, start) + openChar + selected + closeChar + val.substring(end);
+      editorEl.selectionStart = editorEl.selectionEnd = start + openChar.length + selected.length;
+      editorEl.focus();
+      editorEl.dispatchEvent(new Event("input"));
+      updateCursorStatus();
+    }
+
+    function moveCursor(delta) {
+      const pos = Math.max(0, Math.min(editorEl.value.length, editorEl.selectionStart + delta));
+      editorEl.selectionStart = editorEl.selectionEnd = pos;
+      editorEl.focus();
+      updateCursorStatus();
+    }
+
+    // --- Auto-Indent for LISP & Brackets ---
+    function autoIndentCode() {
+      const lines = editorEl.value.split("\n");
+      let depth = 0;
+      const formatted = lines.map(rawLine => {
+        const trimmed = rawLine.trim();
+        if (!trimmed) return "";
+
+        // Count leading closing parens to dedent current line
+        let leadingCloses = 0;
+        for (let i = 0; i < trimmed.length; i++) {
+          if (trimmed[i] === ")" || trimmed[i] === "}") leadingCloses++;
+          else break;
+        }
+        const currentIndent = Math.max(0, depth - leadingCloses);
+        const indentedLine = "  ".repeat(currentIndent) + trimmed;
+
+        // Update depth for next line (ignoring comments and strings)
+        let inStr = false;
+        for (let i = 0; i < trimmed.length; i++) {
+          const c = trimmed[i];
+          if (c === '"' && trimmed[i - 1] !== "\\") inStr = !inStr;
+          if (!inStr) {
+            if (c === ";") break;
+            if (c === "(" || c === "{") depth++;
+            else if (c === ")" || c === "}") depth = Math.max(0, depth - 1);
+          }
+        }
+        return indentedLine;
+      });
+
+      editorEl.value = formatted.join("\n");
+      editorEl.dispatchEvent(new Event("input"));
+      showToast("Código auto-indentado");
+    }
+
+    // --- File Export, iOS Share Sheet & Open ---
+    function getFormattedOutputText() {
+      const raw = editorEl.value.replace(/\r\n/g, "\n");
+      if (state.lineEnding === "CRLF") {
+        return raw.replace(/\n/g, "\r\n");
+      }
+      return raw;
+    }
+
+    function downloadCurrentFile() {
+      const tab = getActiveTab();
+      const fullFileName = (tab.name || "archivo") + (tab.ext || ".txt");
+      const content = getFormattedOutputText();
+      // Use application/octet-stream so iOS Safari preserves custom extensions like .lsp, .scr, .gcode
+      const blob = new Blob([content], { type: "application/octet-stream" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = fullFileName;
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => {
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }, 400);
+      showToast("Descargado: " + fullFileName);
+    }
+
+    async function shareFileIOS() {
+      const tab = getActiveTab();
+      const fullFileName = (tab.name || "archivo") + (tab.ext || ".txt");
+      const content = getFormattedOutputText();
+
+      try {
+        const file = new File([content], fullFileName, { type: "text/plain;charset=utf-8" });
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          await navigator.share({
+            title: fullFileName,
+            text: "Archivo de ingeniería generado en IngePad Pro: " + fullFileName,
+            files: [file]
+          });
+          showToast("Compartido desde iOS");
+          return;
+        }
+      } catch (err) {
+        if (err && err.name === "AbortError") return;
+      }
+      // Fallback to direct download if Web Share API is not supported on desktop browser
+      downloadCurrentFile();
+    }
+
+    function triggerOpenFile() {
+      document.getElementById("hiddenFileInput").click();
+    }
+
+    function handleFileUploaded(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const content = e.target.result;
+        const dotIdx = file.name.lastIndexOf(".");
+        const namePart = dotIdx > 0 ? file.name.substring(0, dotIdx) : file.name;
+        const extPart = dotIdx > 0 ? file.name.substring(dotIdx).toLowerCase() : ".txt";
+
+        const newTab = {
+          id: "tab_" + Date.now(),
+          name: namePart,
+          ext: extPart,
+          content: content.replace(/\r\n/g, "\n")
+        };
+        state.tabs.push(newTab);
+        state.activeTabId = newTab.id;
+        saveState();
+        renderTabs();
+        loadActiveTabIntoEditor();
+        showToast("Archivo cargado: " + file.name);
+      };
+      reader.readAsText(file);
+      event.target.value = "";
+    }
+
+    // --- Search & Replace ---
+    function toggleSearchBar() {
+      const bar = document.getElementById("searchBar");
+      bar.classList.toggle("open");
+      if (bar.classList.contains("open")) {
+        document.getElementById("findInput").focus();
+      }
+    }
+
+    function findNext() {
+      const query = document.getElementById("findInput").value;
+      if (!query) return;
+      const text = editorEl.value;
+      const startPos = editorEl.selectionEnd || 0;
+      let idx = text.toLowerCase().indexOf(query.toLowerCase(), startPos);
+      if (idx === -1) {
+        idx = text.toLowerCase().indexOf(query.toLowerCase(), 0);
+      }
+      if (idx !== -1) {
+        editorEl.focus();
+        editorEl.setSelectionRange(idx, idx + query.length);
+        updateCursorStatus();
+      } else {
+        showToast("No se encontraron coincidencias");
+      }
+    }
+
+    function replaceCurrent() {
+      const query = document.getElementById("findInput").value;
+      const repl = document.getElementById("replaceInput").value;
+      if (!query) return;
+      const selected = editorEl.value.substring(editorEl.selectionStart, editorEl.selectionEnd);
+      if (selected.toLowerCase() === query.toLowerCase()) {
+        insertSnippet(repl);
+      }
+      findNext();
+    }
+
+    function replaceAll() {
+      const query = document.getElementById("findInput").value;
+      const repl = document.getElementById("replaceInput").value;
+      const useRegex = document.getElementById("regexCheck").checked;
+      if (!query) return;
+      try {
+        const regex = useRegex ? new RegExp(query, "g") : new RegExp(query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "gi");
+        editorEl.value = editorEl.value.replace(regex, repl);
+        editorEl.dispatchEvent(new Event("input"));
+        showToast("Reemplazo completado");
+      } catch (e) {
+        showToast("Expresión regular inválida");
+      }
+    }
+
+    function goToLinePrompt() {
+      const lineStr = prompt("Número de línea a la que deseas ir:");
+      if (!lineStr) return;
+      const targetLine = Math.max(1, parseInt(lineStr, 10) || 1);
+      const lines = editorEl.value.split("\n");
+      let charIndex = 0;
+      for (let i = 0; i < Math.min(targetLine - 1, lines.length - 1); i++) {
+        charIndex += lines[i].length + 1;
+      }
+      editorEl.focus();
+      editorEl.setSelectionRange(charIndex, charIndex);
+      updateCursorStatus();
+    }
+
+    // --- Engineering Utilities ---
+    function createFromTemplate(tplKey) {
+      const tpl = TEMPLATES[tplKey];
+      if (!tpl) return;
+      const newTab = {
+        id: "tab_" + Date.now(),
+        name: tpl.name,
+        ext: tpl.ext,
+        content: tpl.content
+      };
+      state.tabs.push(newTab);
+      state.activeTabId = newTab.id;
+      saveState();
+      renderTabs();
+      loadActiveTabIntoEditor();
+      closeModal("templatesModal");
+      showToast("Plantilla cargada: " + tpl.name + tpl.ext);
+    }
+
+    function convertCsvToScr(mode) {
+      const lines = editorEl.value.trim().split("\n");
+      const coords = [];
+      lines.forEach(line => {
+        const parts = line.split(",").map(s => s.trim());
+        // Detect if P,N,E,Z,D (5 cols) or X,Y,Z (2-3 cols)
+        if (parts.length >= 4 && !isNaN(parseFloat(parts[1])) && !isNaN(parseFloat(parts[2]))) {
+          // P, N, E, Z -> AutoCAD uses E(X), N(Y), Z
+          const n = parseFloat(parts[1]);
+          const e = parseFloat(parts[2]);
+          const z = !isNaN(parseFloat(parts[3])) ? parseFloat(parts[3]) : 0.0;
+          coords.push(`${e},${n},${z}`);
+        } else if (parts.length >= 2 && !isNaN(parseFloat(parts[0])) && !isNaN(parseFloat(parts[1]))) {
+          const x = parseFloat(parts[0]);
+          const y = parseFloat(parts[1]);
+          const z = parts.length >= 3 && !isNaN(parseFloat(parts[2])) ? parseFloat(parts[2]) : 0.0;
+          coords.push(`${x},${y},${z}`);
+        }
+      });
+
+      if (coords.length === 0) {
+        showToast("No se detectaron filas numéricas CSV válidas");
+        return;
+      }
+
+      let scr = `; Script AutoCAD generado desde CSV (${coords.length} puntos)\n`;
+      if (mode === "3DPOLY") {
+        scr += "_.3DPOLY\n" + coords.join("\n") + "\n\n_.ZOOM _Extents\n";
+      } else {
+        scr += coords.map(c => `_.POINT ${c}`).join("\n") + "\n_.ZOOM _Extents\n";
+      }
+
+      const newTab = {
+        id: "tab_" + Date.now(),
+        name: "levantamiento_cad",
+        ext: ".scr",
+        content: scr
+      };
+      state.tabs.push(newTab);
+      state.activeTabId = newTab.id;
+      saveState();
+      renderTabs();
+      loadActiveTabIntoEditor();
+      closeModal("engToolsModal");
+      showToast("Script .scr generado con " + coords.length + " puntos");
+    }
+
+    function previewCsvTable() {
+      const container = document.getElementById("csvPreviewContainer");
+      const lines = editorEl.value.trim().split("\n").slice(0, 25);
+      if (lines.length === 0) return;
+      let html = `<table class="csv-table">`;
+      lines.forEach((line, idx) => {
+        const cols = line.split(",");
+        html += "<tr>";
+        cols.forEach(c => {
+          html += idx === 0 ? `<th>${escapeHtml(c)}</th>` : `<td>${escapeHtml(c)}</td>`;
+        });
+        html += "</tr>";
+      });
+      html += `</table>`;
+      container.innerHTML = html;
+    }
+
+    function numberGCodeLines(start, step) {
+      let current = start;
+      const lines = editorEl.value.split("\n").map(line => {
+        const trimmed = line.trim();
+        if (!trimmed || trimmed.startsWith("%") || trimmed.startsWith("O") || trimmed.startsWith("(") || trimmed.startsWith(";")) {
+          return line;
+        }
+        const clean = trimmed.replace(/^N\d+\s*/i, "");
+        const numbered = `N${current} ${clean}`;
+        current += step;
+        return numbered;
+      });
+      editorEl.value = lines.join("\n");
+      editorEl.dispatchEvent(new Event("input"));
+      showToast("Bloques G-Code numerados");
+    }
+
+    function stripGCodeNumbers() {
+      const lines = editorEl.value.split("\n").map(line => line.replace(/^(\s*)N\d+\s+/i, "$1"));
+      editorEl.value = lines.join("\n");
+      editorEl.dispatchEvent(new Event("input"));
+      showToast("Numeración N eliminada");
+    }
+
+    let lastConvertedString = "";
+    function runUnitConversion() {
+      const val = parseFloat(document.getElementById("unitVal").value) || 0;
+      const type = document.getElementById("unitType").value;
+      const resEl = document.getElementById("unitResult");
+      let out = "";
+      if (type === "mm_in") {
+        out = `${val} mm = ${(val / 25.4).toFixed(4)} in  |  ${val} in = ${(val * 25.4).toFixed(3)} mm`;
+        lastConvertedString = (val / 25.4).toFixed(4);
+      } else if (type === "m_ft") {
+        out = `${val} m = ${(val * 3.28084).toFixed(4)} ft  |  ${val} ft = ${(val / 3.28084).toFixed(4)} m`;
+        lastConvertedString = (val * 3.28084).toFixed(4);
+      } else if (type === "mpa_psi") {
+        out = `${val} MPa = ${(val * 145.0377).toFixed(2)} psi  |  ${val} psi = ${(val / 145.0377).toFixed(4)} MPa`;
+        lastConvertedString = (val * 145.0377).toFixed(2);
+      } else if (type === "kw_hp") {
+        out = `${val} kW = ${(val * 1.34102).toFixed(3)} HP  |  ${val} HP = ${(val / 1.34102).toFixed(3)} kW`;
+        lastConvertedString = (val * 1.34102).toFixed(3);
+      } else if (type === "deg_rad") {
+        out = `${val}° = ${(val * Math.PI / 180).toFixed(6)} rad  |  ${val} rad = ${(val * 180 / Math.PI).toFixed(4)}°`;
+        lastConvertedString = (val * Math.PI / 180).toFixed(6);
+      }
+      resEl.textContent = out;
+    }
+
+    function insertConvertedValue() {
+      if (lastConvertedString) {
+        insertSnippet(lastConvertedString);
+        closeModal("engToolsModal");
+      }
+    }
+
+    // --- UI Preferences (CRLF, Word Wrap, Font Size, Theme) ---
+    function toggleLineEnding() {
+      state.lineEnding = state.lineEnding === "CRLF" ? "LF" : "CRLF";
+      document.getElementById("lineEndingBtn").textContent = state.lineEnding === "CRLF" ? "🪟 CRLF (Win)" : "🐧 LF (Unix)";
+      saveState();
+      updateEditorView();
+      showToast("Salto de línea: " + state.lineEnding);
+    }
+
+    function toggleWordWrap() {
+      state.wordWrap = !state.wordWrap;
+      const stage = document.getElementById("editorStage");
+      stage.classList.toggle("wrap-enabled", state.wordWrap);
+      document.getElementById("wrapBtn").textContent = state.wordWrap ? "↩️ Ajuste: SÍ" : "↩️ Ajuste: NO";
+      saveState();
+    }
+
+    function changeFontSize(delta) {
+      state.fontSize = Math.max(11, Math.min(22, state.fontSize + delta));
+      applyFontSize(state.fontSize);
+      saveState();
+    }
+
+    function applyFontSize(size) {
+      document.documentElement.style.setProperty("--editor-font-size", size + "px");
+      document.documentElement.style.setProperty("--editor-line-height", Math.round(size * 1.5) + "px");
+    }
+
+    function cycleTheme() {
+      const order = ["dark", "light", "classic-win"];
+      const next = order[(order.indexOf(state.theme) + 1) % order.length];
+      state.theme = next;
+      applyTheme(next);
+      saveState();
+      const labels = { "dark": "Oscuro CAD", "light": "Claro Moderno", "classic-win": "Clásico Windows" };
+      showToast("Tema: " + labels[next]);
+    }
+
+    function applyTheme(theme) {
+      if (theme === "dark") {
+        document.documentElement.removeAttribute("data-theme");
+      } else {
+        document.documentElement.setAttribute("data-theme", theme);
+      }
+    }
+
+    function downloadReadmeForGitHub() {
+      const readme = `# IngePad Pro — Editor de Texto e Ingeniería para iPhone y Web
+
+Aplicación web progresiva (PWA) de archivo único lista para **GitHub Pages**, diseñada para crear y editar archivos de ingeniería (**.lsp** AutoLISP, **.scr** AutoCAD Script, **.gcode / .nc** CNC, **.py** Python, **.m** MATLAB, **.csv** Topografía COGO, **.dxf** ASCII, etc.) desde un iPhone o iPad con la potencia de un editor de Windows.
+
+## Características principales
+- **Soporte nativo de extensiones de ingeniería**: Exporta archivos reales \`.lsp\`, \`.dcl\`, \`.scr\`, \`.gcode\`, \`.nc\`, \`.py\`, \`.m\`, \`.csv\`, \`.dxf\` y cualquier extensión personalizada.
+- **Compatibilidad Windows CRLF / Unix LF**: Genera saltos de línea \`CRLF\` para que AutoCAD y controladores CNC en Windows lean los archivos sin errores.
+- **Auditor de Paréntesis AutoLISP**: Verifica en tiempo real el balance de \`(\` y \`)\` ignorando comentarios \`;\` y textos.
+- **Barra táctil iOS de símbolos rápidos**: Inserta \`(\`, \`)\`, \`defun\`, \`setq\`, \`"\`, \`;\` y operadores sin cambiar de teclado en el iPhone.
+`;
+      const blob = new Blob([readme], { type: "text/markdown;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "README.md";
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast("README.md descargado");
+    }
+
+    function openModal(id) {
+      document.getElementById(id).classList.add("open");
+    }
+
+    function closeModal(id) {
+      document.getElementById(id).classList.remove("open");
+    }
+
+    let toastTimer = null;
+    function showToast(msg) {
+      const t = document.getElementById("toastMsg");
+      t.textContent = msg;
+      t.classList.add("show");
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => t.classList.remove("show"), 2200);
+    }
+
+    window.addEventListener("DOMContentLoaded", initApp);
+  </script>
+</body>
+</html>
